@@ -1,4 +1,4 @@
-# simple-google-sheets
+# simple-google-mail
 A utility for handling authentication and retrieval of google mail data.
 
 ## Installation
