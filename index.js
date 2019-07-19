@@ -141,8 +141,8 @@ class SimpleGoogleMail {
                 }
         
                 if( response.data.resultSizeEstimate == 0 ) {
-                console.log('New Badge Unlocked: Inbox Zero.');
-                return;
+                    console.log('New Badge Unlocked: Inbox Zero.');
+                    return resolve([]);
                 }      
         
                 return resolve(_this.getMessageObjects(gmail, auth, response.data.messages));      
