@@ -224,18 +224,6 @@ class SimpleGoogleMail {
     }
 }
 
-const mail = new SimpleGoogleMail({
-    SCOPES: ['https://mail.google.com/'],
-    CREDENTIALS_PATH: './credentials/google-mail-credentials.json',
-    TOKEN_PATH: './credentials/google-mail-token.json',
-    MAIL_OUTPUT_PATH: './output/mail'
-});
-
-console.log( mail );
-
-let rows = mail.processRecentEmailWithCredentials();
-console.log( rows );
-
 module.exports = {
   SimpleGoogleMail
 };
