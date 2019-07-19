@@ -84,6 +84,10 @@ class SimpleGoogleMail {
             message_ids.push(messageObjects[m].id);
         }  
         
+        if( message_ids.length == 0 ) {
+            return; // Nothing to delete
+        }
+
         console.log('Deleting emails: ', message_ids);
         const gmail = google.gmail({version: 'v1', auth});
         gmail.users.messages.batchDelete({auth:auth, userId:'me', "resource": {"ids":message_ids}}, (err,result) => {
@@ -137,7 +141,7 @@ class SimpleGoogleMail {
             gmail.users.messages.list({auth: auth, userId: 'me', maxResults: 10}, function(err, response) {
                 if (err) {
                     console.log('The API returned an error: ' + err);
-                    return;
+                    return resolve([]);
                 }
         
                 if( response.data.resultSizeEstimate == 0 ) {
