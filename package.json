@@ -1,6 +1,6 @@
 {
   "name": "simple-google-mail",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "A utility for handling authentication and retrieval of google mail data.",
   "main": "index.js",
   "scripts": {

@@ -73,27 +73,31 @@ class SimpleGoogleMail {
 
     async processRecentEmail(auth) {
         var messageObjects = await this.getRecentEmail(auth);
-        this.writeEmailsToFile(messageObjects);
-        this.deleteEmailsFromGmail(auth, messageObjects);  
+        await this.writeEmailsToFile(messageObjects);
+        await this.deleteEmailsFromGmail(auth, messageObjects);  
         return messageObjects;
     }
       
-    deleteEmailsFromGmail(auth, messageObjects=[]) {
+    async deleteEmailsFromGmail(auth, messageObjects=[]) {
         var message_ids = [];
         for(let m in messageObjects) {
             message_ids.push(messageObjects[m].id);
         }  
         
-        if( message_ids.length == 0 ) {
-            return; // Nothing to delete
-        }
+        return new Promise( resolve => {
 
-        console.log('Deleting emails: ', message_ids);
-        const gmail = google.gmail({version: 'v1', auth});
-        gmail.users.messages.batchDelete({auth:auth, userId:'me', "resource": {"ids":message_ids}}, (err,result) => {
-            if(err) console.log(err);
-            if(result) console.log(result);
-        });    
+            if( message_ids.length == 0 ) {
+                return resolve(); // Nothing to delete
+            }
+
+            console.log('Deleting emails: ', message_ids);
+            const gmail = google.gmail({version: 'v1', auth});
+            gmail.users.messages.batchDelete({auth:auth, userId:'me', "resource": {"ids":message_ids}}, (err,result) => {
+                if(err) console.log(err);
+                //if(result) console.log(result);            
+                return resolve();
+            });    
+        });
     }
     
     /**
@@ -101,26 +105,39 @@ class SimpleGoogleMail {
      *
      * @param {Array} messageObjects
      */
-    writeEmailsToFile( messageObjects = [] ) {
+    async writeEmailsToFile( messageObjects = [] ) {
         for( let m in messageObjects ) {
             var messageObject = messageObjects[m];
             console.log(messageObject.subject);
-            this.writeMessageObjectToFile( messageObject );
+            await this.writeMessageObjectToFile( messageObject );
         }
     }
     
-    writeMessageObjectToFile( messageObject = {} ) {        
-        fs.mkdir(this.config.MAIL_OUTPUT_PATH, () => {
-            var emailFileLocation = this.config.MAIL_OUTPUT_PATH + '/' + messageObject.subject + '.html';
-        
-            fs.writeFile(emailFileLocation, messageObject.message, (errorWritingFile) => {
-            if (errorWritingFile) {
-                console.error(errorWritingFile);
-                console.error('Failure to write: ' + emailFileLocation);
-                return;
-            }
-            //file written successfully
-            console.log('Successfully wrote: ' + emailFileLocation);
+    async writeMessageObjectToFile( messageObject = {} ) {        
+
+        if( !fs.existsSync(this.config.MAIL_OUTPUT_PATH) ) {
+            fs.mkdirSync(this.config.MAIL_OUTPUT_PATH);
+        }
+
+        // var emailFileLocation = this.config.MAIL_OUTPUT_PATH + '/' + messageObject.subject + '.html';
+        // await fs.writeFileSync(emailFileLocation, messageObject.message);
+        // console.log('Successfully wrote: ' + emailFileLocation);
+        // return Promise.resolve();
+        return new Promise( resolve => {
+            fs.mkdir(this.config.MAIL_OUTPUT_PATH, () => {
+                var emailFileLocation = this.config.MAIL_OUTPUT_PATH + '/' + messageObject.subject + '.html';
+                var _resolve = resolve;
+
+                fs.writeFile(emailFileLocation, messageObject.message, (errorWritingFile) => {
+                    if (errorWritingFile) {
+                        console.error(errorWritingFile);
+                        console.error('Failure to write: ' + emailFileLocation);
+                        return _resolve();
+                    }
+                    //file written successfully
+                    console.log('Successfully wrote: ' + emailFileLocation);
+                    return _resolve();
+                });
             });
         });
     }
@@ -221,7 +238,7 @@ class SimpleGoogleMail {
     getValueForKeyFromHeaders(headers, key) {
         for( let h = 0; h < headers.length; h++ ) {
             if( headers[h].name === key ) {
-            return headers[h].value;
+                return headers[h].value;
             }    
         }
         return 'No Subject';
